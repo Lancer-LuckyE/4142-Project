@@ -260,9 +260,9 @@ CREATE DOMAIN CRIME_DATA_MART.CRIME_TYPE AS CHAR CHECK(
     'homicide', 
     'mischief', 
     'offence_against_a_person', 
-    'theft-from-vehicle', 
-    'traffic-accident-fatal', 
-    'traffic-accident-inhury'
+    'theft_from_vehicle', 
+    'traffic_accident_fatal', 
+    'traffic_accident_inhury'
   )
 );
 
