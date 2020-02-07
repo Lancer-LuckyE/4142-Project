@@ -16,12 +16,13 @@ CREATE DOMAIN CRIME_DATA_MART.DAY_OF_WEEK AS CHAR CHECK(
 
 CREATE TABLE IF NOT EXISTS CRIME_DATA_MART.Date(
   date_key SERIAL NOT NULL, 
+  crime_date DATE NOT NULL,
   day_of_the_week DAY_OF_WEEK NOT NULL, 
   week_of_the_year INT NOT NULL, 
   quarter INT NOT NULL, 
   weekend BOOLEAN NOT NULL, 
   holiday BOOLEAN NOT NULL, 
-  holiday_name VARCHAR(30) NOT NULL, 
+  holiday_name VARCHAR(50) NOT NULL, 
   PRIMARY KEY(date_key)
 );
 
@@ -275,9 +276,9 @@ CREATE TABLE IF NOT EXISTS CRIME_DATA_MART.Crime(
   is_fatal BOOLEAN NOT NULL, 
   crime_category CRIME_CATEGORY NOT NULL, 
   crime_type CRIME_TYPE NOT NULL, 
-  first_occurence_time time without time zone NOT NULL, 
-  last_occurence_time time without time zone NOT NULL, 
-  report_time time without time zone NOT NULL,
+  first_occurence_time TIME WITHOUT TIME ZONE NOT NULL, 
+  last_occurence_time TIME WITHOUT TIME ZONE NOT NULL, 
+  report_time TIME WITHOUT TIME ZONE NOT NULL,
   PRIMARY KEY(crime_key)
 );
 
@@ -294,6 +295,17 @@ CREATE TABLE IF NOT EXISTS CRIME_DATA_MART.Weather(
 );
 
 
+CREATE TABLE IF NOT EXISTS CRIME_DATA_MART.Event(
+  event_key SERIAL NOT NULL, 
+  event_name VARCHAR(30) NOT NULL,
+  event_type VARCHAR(30) NOT NULL,
+  event_location VARCHAR(50) NOT NULL,
+  event_location_size INT NOT NULL,
+  PRIMARY KEY(event_key)
+);
+
+
+
 
 CREATE TABLE IF NOT EXISTS CRIME_DATA_MART.CrimeFact(
   crime_key SERIAL NOT NULL, 
@@ -302,10 +314,12 @@ CREATE TABLE IF NOT EXISTS CRIME_DATA_MART.CrimeFact(
   first_occurrence_date_key SERIAL NOT NULL, 
   last_occurrence_date_key SERIAL NOT NULL, 
   report_date_key SERIAL NOT NULL, 
+  event_key SERIAL NOT NULL, 
   PRIMARY KEY(
     crime_key, location_key, 
     weather_key, first_occurrence_date_key, 
-    last_occurrence_date_key, report_date_key
+    last_occurrence_date_key, report_date_key,
+    event_key
   ), 
   FOREIGN KEY(crime_key) REFERENCES CRIME_DATA_MART.Crime(crime_key), 
   FOREIGN KEY(location_key) REFERENCES CRIME_DATA_MART.Location(location_key), 
@@ -313,6 +327,7 @@ CREATE TABLE IF NOT EXISTS CRIME_DATA_MART.CrimeFact(
   FOREIGN KEY(first_occurrence_date_key) REFERENCES CRIME_DATA_MART.Date(date_key), 
   FOREIGN KEY(last_occurrence_date_key) REFERENCES CRIME_DATA_MART.Date(date_key), 
   FOREIGN KEY(report_date_key) REFERENCES CRIME_DATA_MART.Date(date_key)
+  FOREIGN KEY(event_key) REFERENCES CRIME_DATA_MART.Event(event_key)
 );
 
 
