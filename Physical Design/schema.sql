@@ -326,7 +326,7 @@ CREATE TABLE IF NOT EXISTS CRIME_DATA_MART.CrimeFact(
   FOREIGN KEY(weather_key) REFERENCES CRIME_DATA_MART.Weather(weather_key), 
   FOREIGN KEY(first_occurrence_date_key) REFERENCES CRIME_DATA_MART.Date(date_key), 
   FOREIGN KEY(last_occurrence_date_key) REFERENCES CRIME_DATA_MART.Date(date_key), 
-  FOREIGN KEY(report_date_key) REFERENCES CRIME_DATA_MART.Date(date_key)
+  FOREIGN KEY(report_date_key) REFERENCES CRIME_DATA_MART.Date(date_key),
   FOREIGN KEY(event_key) REFERENCES CRIME_DATA_MART.Event(event_key)
 );
 
