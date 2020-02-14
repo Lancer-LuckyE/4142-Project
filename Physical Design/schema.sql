@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS CRIME_DATA_MART.Location(
   city VARCHAR(20) NOT NULL, 
   neighbourhood VARCHAR(50) NOT NULL, 
   address VARCHAR(100) NOT NULL, 
+  crime_rate DOUBLE PRECISION NOT NULL,
   PRIMARY KEY(location_key)
 );
 
@@ -271,9 +272,6 @@ CREATE DOMAIN CRIME_DATA_MART.CRIME_TYPE AS CHAR CHECK(
 
 CREATE TABLE IF NOT EXISTS CRIME_DATA_MART.Crime(
   crime_key SERIAL NOT NULL, 
-  is_traffic_accident BOOLEAN NOT NULL, 
-  is_crime BOOLEAN NOT NULL, 
-  is_fatal BOOLEAN NOT NULL, 
   crime_category CRIME_CATEGORY NOT NULL, 
   crime_type CRIME_TYPE NOT NULL, 
   first_occurence_time TIME WITHOUT TIME ZONE NOT NULL, 
@@ -315,6 +313,9 @@ CREATE TABLE IF NOT EXISTS CRIME_DATA_MART.CrimeFact(
   last_occurrence_date_key SERIAL NOT NULL, 
   report_date_key SERIAL NOT NULL, 
   event_key SERIAL NOT NULL, 
+  is_traffic BOOLEAN NOT NULL, 
+  is_nighttime BOOLEAN NOT NULL, 
+  is_fatal BOOLEAN NOT NULL, 
   PRIMARY KEY(
     crime_key, location_key, 
     weather_key, first_occurrence_date_key, 
@@ -326,7 +327,7 @@ CREATE TABLE IF NOT EXISTS CRIME_DATA_MART.CrimeFact(
   FOREIGN KEY(weather_key) REFERENCES CRIME_DATA_MART.Weather(weather_key), 
   FOREIGN KEY(first_occurrence_date_key) REFERENCES CRIME_DATA_MART.Date(date_key), 
   FOREIGN KEY(last_occurrence_date_key) REFERENCES CRIME_DATA_MART.Date(date_key), 
-  FOREIGN KEY(report_date_key) REFERENCES CRIME_DATA_MART.Date(date_key)
+  FOREIGN KEY(report_date_key) REFERENCES CRIME_DATA_MART.Date(date_key),
   FOREIGN KEY(event_key) REFERENCES CRIME_DATA_MART.Event(event_key)
 );
 
