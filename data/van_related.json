@@ -1,0 +1,26 @@
+{
+  "population" : {
+    "Strathcona": 12170, 
+    "Kerrisdale": 14732, 
+    "Dunbar-Southlands": 21754,
+    "Grandview-Woodland": 27297, 
+    "Sunset": 36286, "West End": 44543,
+    "Central Business District": 54690, 
+    "Hastings-Sunrise": 33993,
+    "Victoria-Fraserview": 30711,
+    "Fairview": 31432, 
+    "Kensington-Cedar Cottage": 47471,
+    "West Point Grey": 12803, 
+    "Shaughnessy": 8807, 
+    "Renfrew-Collingwood": 50495,
+    "Killarney": 28458, 
+    "Riley Park":21794, 
+    "Arbutus Ridge": 15908, 
+    "Musqueam": 1569,
+    "Mount Pleasant": 26400, 
+    "Kitsilano": 41371, 
+    "South Cambie": 7682,
+    "Marpole": 23832, 
+    "Oakridge": 12443
+  }
+}
