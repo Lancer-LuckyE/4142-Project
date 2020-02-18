@@ -2,7 +2,6 @@ import pandas as pd
 import holidays
 import json
 
-
 us_holidays = holidays.US()
 
 
@@ -24,7 +23,15 @@ def read_files(path):
                    "REPORTED_DATE", "INCIDENT_ADDRESS", "GEO_LON", "GEO_LAT", "NEIGHBORHOOD_ID", "IS_CRIME",
                    "IS_TRAFFIC"]
         df = pd.read_csv(path, usecols=use_col, parse_dates=['FIRST_OCCURRENCE_DATE', 'LAST_OCCURRENCE_DATE',
-                                                               'REPORTED_DATE'])
+                                                             'REPORTED_DATE'], nrows=100) #TODO
+
+        df['DATE_F'] = pd.DatetimeIndex(df['FIRST_OCCURRENCE_DATE']).date
+        df['DATE_L'] = pd.DatetimeIndex(df['LAST_OCCURRENCE_DATE']).date
+        df['DATE_R'] = pd.DatetimeIndex(df['REPORTED_DATE']).date
+        df['TIME_F'] = pd.DatetimeIndex(df['FIRST_OCCURRENCE_DATE']).time
+        df['TIME_L'] = pd.DatetimeIndex(df['LAST_OCCURRENCE_DATE']).time
+        df['TIME_R'] = pd.DatetimeIndex(df['REPORTED_DATE']).time
+
         # 2723000 is the average population from 2015 to 2020
         crime_rate = (len(df) / 6) * (10000 / 2723000)
         df['CRIME_RATE'] = crime_rate
@@ -60,7 +67,7 @@ def date_data(crime_date):
 
 def location_data(lon, lat, neighbourhood, address, crime_rate):
     """
-    prepare the location data to insert into location dimension
+    prepare the location data to be inserted into location dimension
     :param lon: (float) longitude from the dataframe
     :param lat: (float) latitude from the dataframe
     :param neighbourhood: (str) neighbourhood id from the dataframe
@@ -69,17 +76,53 @@ def location_data(lon, lat, neighbourhood, address, crime_rate):
     :return: (dict, str) a dictionary containing all info that is inserting into location dimension, location_key dict key
     """
     city = 'Denver'
-    return {'longitude': lon, 'latitude': lat, 'city': city, 'neighbourhood': neighbourhood, 'address': address, 'crime_rate': crime_rate}, 'location_key'
+    return {'longitude': lon, 'latitude': lat, 'city': city, 'neighbourhood': neighbourhood, 'address': address,
+            'crime_rate': crime_rate}, 'location_key'
 
 
-def crime_data():
-    # TODO
-    return
+def crime_data(c_category, c_type, first_occurrence_date, last_occurrence_date, report_date):
+    """
+    prepare the location data to be inserted into crime dimension
+    :param c_category: (str) crime category
+    :param c_type: (str) crime type
+    :param first_occurrence_date: (datetime) first occurrence date
+    :param last_occurrence_date: (datetime) last occurrence date
+    :param report_date: (datetime) case reported date
+    :return: (dict, str) a dictionary containing all info that is inserting into crime dimension, crime_key dict key
+    """
+    is_violent = read_json('./data/denver_related.json')['violent-crime']
+    severity = 'non-vio'
+    if (c_category in is_violent) or (c_type in is_violent):
+        severity = 'vio'
+
+    first_time = str(first_occurrence_date.hour) + ':' + str(first_occurrence_date.minute) + ':' + \
+                 str(first_occurrence_date.second)
+    if last_occurrence_date is not None:
+        last_time = str(first_occurrence_date.hour) + ':' + str(first_occurrence_date.minute) + ':' + \
+                    str(first_occurrence_date.second)
+    else :
+        last_time = first_time
+    return {'crime_category': c_category, 'crime_type': c_type, 'first_occurrence_time': first_time,
+            'last_occurrence_time': last_time, 'report_time': report_date, 'crime_severity': severity}, 'crime_key'
 
 
-def weather_data():
-    # TODO
-    return
+def weather_data(date_f, time_f):
+    """
+    prepare the location data to be inserted into weather dimension
+    :param date_f: (datetime) the first occurrence date for denver data
+    :param time_f: (datetime) the first occurrence time for denver data
+    :return: (dict, str) a dictionary containing all info that is inserting into weather dimension, weather_key dict key
+    """
+    weather_df = pd.read_csv('./data/Latest Denver & Vancouver weather data.csv', parse_dates=['dt_iso'])
+    weather_df = weather_df[weather_df['city_name'] == 'Denver']
+    weather_df['DATE'] = pd.DatetimeIndex(weather_df['dt_iso']).date
+    crime_date_weather = weather_df[weather_df['DATE'] == date_f]
+    crime_time_weather = crime_date_weather[pd.DatetimeIndex(crime_date_weather['dt_iso']).hour == time_f.hour]
+
+    temp = crime_time_weather['temp']
+    w_desc = crime_time_weather['weather_description']
+    humidity = crime_time_weather['humidity']
+    return {'temperature': temp, 'weather_description': w_desc, 'humidity': humidity, 'city': 'Denver'}, 'weather_key'
 
 
 def event_data():
@@ -88,8 +131,5 @@ def event_data():
 
 
 def fact_data():
-    # TODO
+
     return
-
-
-

@@ -13,7 +13,7 @@ def creat_dimensions():
     date_cols = ['date_key', 'crime_date', 'day_of_the_week', 'week_of_the_year', 'quarter', 'weekend', 'holiday',
                  'holiday_name']
     location_cols = ['location_key', 'longitude', 'latitude', 'city', 'neighbourhood', 'address', 'crime_rate']
-    crime_cols = ['crime_key', 'crime_category', 'crime_type', 'first_occurence_time'  'last_occurence_time',
+    crime_cols = ['crime_key', 'crime_category', 'crime_type', 'first_occurrence_time'  'last_occurrence_time',
                   'report_time', 'crime_severity']
     weather_cols = ['weather_key', 'temperature', 'visibility', 'weather_description', 'humidity', 'precipitation']
     event_cols = ['event_key', 'event_name', 'event_type', 'event_location', 'event_location_size']
