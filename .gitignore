@@ -7,3 +7,5 @@ Data Staging/data/*.csv
 Data_Staging.iml
 /data/*.csv
 /Data Staging/src/.ipynb_checkpoints
+out
+

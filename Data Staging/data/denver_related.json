@@ -95,5 +95,18 @@
     "other-enviornment-animal-viol",
     "burg-auto-theft-busn-w-force",
     "liquor-other-viol"
+  ],
+  "fatal-crime": [
+    "murder",
+    "traffic-accident-fatal",
+    "Homicide",
+    "Vehicle Collision or Pedestrian Struck (with Fatality)",
+    "theft-embezzle",
+    "homicide-other",
+    "traf-vehicular-homicide",
+    "homicide-family",
+    "homicide-conspiracy",
+    "homicide-negligent",
+    "homicide-police-by-gun"
   ]
 }
