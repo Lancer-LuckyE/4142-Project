@@ -288,6 +288,12 @@ CREATE TABLE IF NOT EXISTS CRIME_DATA_MART.Crime(
 );
 
 
+CREATE DOMAIN CRIME_DATA_MART.City AS CHAR CHECK(
+  VALUE IN(
+    'Vancouver', 'Danver'
+  )
+);
+
 
 CREATE TABLE IF NOT EXISTS CRIME_DATA_MART.Weather(
   weather_key SERIAL NOT NULL, 
@@ -295,6 +301,7 @@ CREATE TABLE IF NOT EXISTS CRIME_DATA_MART.Weather(
   weather_description VARCHAR(30), 
   humidity REAL, 
   precipitation REAL,
+  city City,
   PRIMARY KEY(weather_key)
 );
 
@@ -305,6 +312,7 @@ CREATE TABLE IF NOT EXISTS CRIME_DATA_MART.Event(
   event_type VARCHAR(30),
   event_location VARCHAR(50),
   event_location_size INT,
+  city City,
   PRIMARY KEY(event_key)
 );
 
