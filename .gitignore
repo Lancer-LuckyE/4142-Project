@@ -4,3 +4,4 @@
 .DS_Stroe
 Data_Staging.iml
 /data/*.csv
+/Data Staging/src/.ipynb_checkpoints
