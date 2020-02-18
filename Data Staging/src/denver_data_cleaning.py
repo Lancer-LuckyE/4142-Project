@@ -23,11 +23,17 @@ def read_files(path):
                    "REPORTED_DATE", "INCIDENT_ADDRESS", "GEO_LON", "GEO_LAT", "NEIGHBORHOOD_ID", "IS_CRIME",
                    "IS_TRAFFIC"]
         df = pd.read_csv(path, usecols=use_col, parse_dates=['FIRST_OCCURRENCE_DATE', 'LAST_OCCURRENCE_DATE',
-                                                             'REPORTED_DATE'])
+                                                             'REPORTED_DATE'], nrows=100) #TODO
 
-        df = df
-        # 265600 is the average population from 2015 to 2017
-        crime_rate = (len(df) / 6) * (10000 / 265600)
+        df['DATE_F'] = pd.DatetimeIndex(df['FIRST_OCCURRENCE_DATE']).date
+        df['DATE_L'] = pd.DatetimeIndex(df['LAST_OCCURRENCE_DATE']).date
+        df['DATE_R'] = pd.DatetimeIndex(df['REPORTED_DATE']).date
+        df['TIME_F'] = pd.DatetimeIndex(df['FIRST_OCCURRENCE_DATE']).time
+        df['TIME_L'] = pd.DatetimeIndex(df['LAST_OCCURRENCE_DATE']).time
+        df['TIME_R'] = pd.DatetimeIndex(df['REPORTED_DATE']).time
+
+        # 2723000 is the average population from 2015 to 2020
+        crime_rate = (len(df) / 6) * (10000 / 2723000)
         df['CRIME_RATE'] = crime_rate
 
         return df
@@ -88,25 +94,35 @@ def crime_data(c_category, c_type, first_occurrence_date, last_occurrence_date, 
     severity = 'non-vio'
     if (c_category in is_violent) or (c_type in is_violent):
         severity = 'vio'
+
     first_time = str(first_occurrence_date.hour) + ':' + str(first_occurrence_date.minute) + ':' + \
                  str(first_occurrence_date.second)
-    last_time = str(last_occurrence_date.hour) + ':' + str(last_occurrence_date.minute) + ':' + \
-                str(last_occurrence_date.second)
+    if last_occurrence_date is not None:
+        last_time = str(first_occurrence_date.hour) + ':' + str(first_occurrence_date.minute) + ':' + \
+                    str(first_occurrence_date.second)
+    else :
+        last_time = first_time
     return {'crime_category': c_category, 'crime_type': c_type, 'first_occurrence_time': first_time,
             'last_occurrence_time': last_time, 'report_time': report_date, 'crime_severity': severity}, 'crime_key'
 
 
-def weather_data(date):
-    # read csv humidity, temp, description, precipitation
-    humidity_df = pd.read_csv('./data/humidity.csv', usecols=['datetime', 'Denver'], parse_dates=['datetime'])
-    description_df = pd.read_csv('./data/weather_description.csv', usecols=['datetime', 'Denver'], parse_dates=['datetime'])
-    temp_df = pd.read_csv('./data/temperature.csv', usecols=['datetime', 'Denver'], parse_dates=['datetime'])
-    temp = 0
-    w_desc = "hello world"
-    humidity = 0
-    precipitation = 0
-    return {'temperature': temp, 'weather_description': w_desc, 'humidity': humidity, 'precipitation': precipitation,
-            'city': 'denver'}, 'weather_key'
+def weather_data(date_f, time_f):
+    """
+    prepare the location data to be inserted into weather dimension
+    :param date_f: (datetime) the first occurrence date for denver data
+    :param time_f: (datetime) the first occurrence time for denver data
+    :return: (dict, str) a dictionary containing all info that is inserting into weather dimension, weather_key dict key
+    """
+    weather_df = pd.read_csv('./data/Latest Denver & Vancouver weather data.csv', parse_dates=['dt_iso'])
+    weather_df = weather_df[weather_df['city_name'] == 'Denver']
+    weather_df['DATE'] = pd.DatetimeIndex(weather_df['dt_iso']).date
+    crime_date_weather = weather_df[weather_df['DATE'] == date_f]
+    crime_time_weather = crime_date_weather[pd.DatetimeIndex(crime_date_weather['dt_iso']).hour == time_f.hour]
+
+    temp = crime_time_weather['temp']
+    w_desc = crime_time_weather['weather_description']
+    humidity = crime_time_weather['humidity']
+    return {'temperature': temp, 'weather_description': w_desc, 'humidity': humidity, 'city': 'Denver'}, 'weather_key'
 
 
 def event_data():
@@ -115,5 +131,5 @@ def event_data():
 
 
 def fact_data():
-    # TODO
+
     return
