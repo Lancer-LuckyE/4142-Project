@@ -30,10 +30,14 @@ def read_files(path):
         df['DATE'] = df['MONTH'] + '/' + df['DAY'] + '/' + df['YEAR']
         df['TIME'] = df['HOUR'] + ':' + df['MINUTE'] + ':00'
         df['DATE'] = df['DATE'].apply(pd.to_datetime)
+
+
+
         # calculate crime rate
         # 613576 is the average population from 2001 to 2017
         crime_rate = (len(df) / len(df['YEAR'].unique())) * (10000 / 613576)
         df['CRIME_RATE'] = crime_rate
+
         return df
     else:
         raise FileNotFoundError
