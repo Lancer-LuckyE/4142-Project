@@ -313,19 +313,16 @@ CREATE TABLE IF NOT EXISTS CRIME_DATA_MART.Event(
 
 CREATE TABLE IF NOT EXISTS CRIME_DATA_MART.CrimeFact(
   crime_key SERIAL NOT NULL, 
-  location_key SERIAL, 
-  weather_key SERIAL, 
-  first_occurrence_date_key SERIAL, 
-  last_occurrence_date_key SERIAL, 
-  report_date_key SERIAL, 
-  event_key SERIAL, 
+  location_key SERIAL NOT NULL, 
+  weather_key SERIAL NOT NULL, 
+  report_date_key SERIAL NOT NULL, 
+  event_key SERIAL NOT NULL, 
   is_traffic BOOLEAN, 
   is_nighttime BOOLEAN, 
   is_fatal BOOLEAN, 
   PRIMARY KEY(
     crime_key, location_key, 
-    weather_key, first_occurrence_date_key, 
-    last_occurrence_date_key, report_date_key,
+    weather_key, report_date_key,
     event_key
   ), 
   FOREIGN KEY(crime_key) REFERENCES CRIME_DATA_MART.Crime(crime_key), 
