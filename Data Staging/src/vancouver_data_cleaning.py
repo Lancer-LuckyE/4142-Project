@@ -27,8 +27,9 @@ def read_files(path):
         df = pd.read_csv(path, usecols=use_col, dtype={'HOUR': str, 'YEAR': str, 'MONTH': str, 'DAY': str,
                                                          'MINUTE': str})
         # concatenate month, day, year, hour, minute and convert to datetime
-        df['DATETIME'] = df['MONTH'] + '/' + df['DAY'] + '/' + df['YEAR'] + ' ' + df['HOUR'] + ':' + df['MINUTE'] + ':00'
-        df['DATETIME'] = df['DATETIME'].apply(pd.to_datetime)
+        df['DATE'] = df['MONTH'] + '/' + df['DAY'] + '/' + df['YEAR']
+        df['TIME'] = df['HOUR'] + ':' + df['MINUTE'] + ':00'
+        df['DATE'] = df['DATE'].apply(pd.to_datetime)
         # calculate crime rate
         # 613576 is the average population from 2001 to 2017
         crime_rate = (len(df) / len(df['YEAR'].unique())) * (10000 / 613576)

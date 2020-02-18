@@ -2,5 +2,6 @@
 /.idea/workspace.xml
 .idea/
 .DS_Stroe
-Data_Staging.iml
-/data/*.csv
+4142-Project.iml
+Data Staging/data/*.csv
+

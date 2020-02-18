@@ -78,5 +78,22 @@
     "athmar-park": 8898,
     "regis": 3934,
     "indian-creek": 3096
-  }
+  },
+  "violent-crime": [
+    "aggravated-assault",
+    "arson",
+    "burglary",
+    "murder",
+    "other-crimes-against-persons",
+    "robbery",
+    "sexual-assault",
+    "burglary-business-by-force",
+    "burg-auto-theft-resd-w-force",
+    "pawn-broker-viol",
+    "weapon-other-viol",
+    "robbery-purse-snatch-w-force",
+    "other-enviornment-animal-viol",
+    "burg-auto-theft-busn-w-force",
+    "liquor-other-viol"
+  ]
 }
