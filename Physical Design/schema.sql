@@ -16,13 +16,13 @@ CREATE DOMAIN CRIME_DATA_MART.DAY_OF_WEEK AS CHAR CHECK(
 
 CREATE TABLE IF NOT EXISTS CRIME_DATA_MART.Date(
   date_key SERIAL NOT NULL, 
-  crime_date DATE NOT NULL,
-  day_of_the_week DAY_OF_WEEK NOT NULL, 
-  week_of_the_year INT NOT NULL, 
-  quarter INT NOT NULL, 
-  weekend BOOLEAN NOT NULL, 
-  holiday BOOLEAN NOT NULL, 
-  holiday_name VARCHAR(50) NOT NULL, 
+  crime_date DATE,
+  day_of_the_week DAY_OF_WEEK, 
+  week_of_the_year INT, 
+  quarter INT, 
+  weekend BOOLEAN, 
+  holiday BOOLEAN, 
+  holiday_name VARCHAR(50), 
   PRIMARY KEY(date_key)
 );
 
@@ -30,12 +30,12 @@ CREATE TABLE IF NOT EXISTS CRIME_DATA_MART.Date(
 
 CREATE TABLE IF NOT EXISTS CRIME_DATA_MART.Location(
   location_key SERIAL NOT NULL, 
-  longitude DOUBLE PRECISION NOT NULL, 
-  latitude DOUBLE PRECISION NOT NULL, 
-  city VARCHAR(20) NOT NULL, 
-  neighbourhood VARCHAR(50) NOT NULL, 
-  address VARCHAR(100) NOT NULL, 
-  crime_rate DOUBLE PRECISION NOT NULL,
+  longitude DOUBLE PRECISION, 
+  latitude DOUBLE PRECISION, 
+  city VARCHAR(20), 
+  neighbourhood VARCHAR(50), 
+  address VARCHAR(100), 
+  crime_rate DOUBLE PRECISION,
   PRIMARY KEY(location_key)
 );
 
@@ -278,34 +278,41 @@ CREATE DOMAIN CRIME_DATA_MART.CRIME_SEVERITY AS CHAR CHECK(
 
 CREATE TABLE IF NOT EXISTS CRIME_DATA_MART.Crime(
   crime_key SERIAL NOT NULL, 
-  crime_category CRIME_CATEGORY NOT NULL, 
-  crime_type CRIME_TYPE NOT NULL, 
-  first_occurence_time TIME WITHOUT TIME ZONE NOT NULL, 
-  last_occurence_time TIME WITHOUT TIME ZONE NOT NULL, 
-  report_time TIME WITHOUT TIME ZONE NOT NULL,
-  crime_severity CRIME_SEVERITY NOT NULL,
+  crime_category CRIME_CATEGORY, 
+  crime_type CRIME_TYPE, 
+  first_occurence_time TIME WITHOUT TIME ZONE, 
+  last_occurence_time TIME WITHOUT TIME ZONE, 
+  report_time TIME WITHOUT TIME ZONE,
+  crime_severity CRIME_SEVERITY,
   PRIMARY KEY(crime_key)
 );
 
 
+CREATE DOMAIN CRIME_DATA_MART.City AS CHAR CHECK(
+  VALUE IN(
+    'Vancouver', 'Danver'
+  )
+);
+
 
 CREATE TABLE IF NOT EXISTS CRIME_DATA_MART.Weather(
   weather_key SERIAL NOT NULL, 
-  temperature REAL NOT NULL, 
-  visibility REAL NOT NULL, 
-  weather_description VARCHAR(30) NOT NULL, 
-  humidity REAL NOT NULL, 
-  precipitation REAL NOT NULL,
+  temperature REAL, 
+  weather_description VARCHAR(30), 
+  humidity REAL, 
+  precipitation REAL,
+  city City,
   PRIMARY KEY(weather_key)
 );
 
 
 CREATE TABLE IF NOT EXISTS CRIME_DATA_MART.Event(
   event_key SERIAL NOT NULL, 
-  event_name VARCHAR(30) NOT NULL,
-  event_type VARCHAR(30) NOT NULL,
-  event_location VARCHAR(50) NOT NULL,
-  event_location_size INT NOT NULL,
+  event_name VARCHAR(30),
+  event_type VARCHAR(30),
+  event_location VARCHAR(50),
+  event_location_size INT,
+  city City,
   PRIMARY KEY(event_key)
 );
 
@@ -316,17 +323,14 @@ CREATE TABLE IF NOT EXISTS CRIME_DATA_MART.CrimeFact(
   crime_key SERIAL NOT NULL, 
   location_key SERIAL NOT NULL, 
   weather_key SERIAL NOT NULL, 
-  first_occurrence_date_key SERIAL NOT NULL, 
-  last_occurrence_date_key SERIAL NOT NULL, 
   report_date_key SERIAL NOT NULL, 
   event_key SERIAL NOT NULL, 
-  is_traffic BOOLEAN NOT NULL, 
-  is_nighttime BOOLEAN NOT NULL, 
-  is_fatal BOOLEAN NOT NULL, 
+  is_traffic BOOLEAN, 
+  is_nighttime BOOLEAN, 
+  is_fatal BOOLEAN, 
   PRIMARY KEY(
     crime_key, location_key, 
-    weather_key, first_occurrence_date_key, 
-    last_occurrence_date_key, report_date_key,
+    weather_key, report_date_key,
     event_key
   ), 
   FOREIGN KEY(crime_key) REFERENCES CRIME_DATA_MART.Crime(crime_key), 
