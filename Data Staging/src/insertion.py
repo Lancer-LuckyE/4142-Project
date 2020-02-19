@@ -10,7 +10,8 @@ def creat_dimensions():
     """
     date_cols = ['date_key', 'crime_date', 'day_of_the_week', 'week_of_the_year', 'quarter', 'weekend', 'holiday',
                  'holiday_name']
-    location_cols = ['location_key', 'longitude', 'latitude', 'city', 'neighbourhood', 'address', 'population', 'crime_rate']
+    location_cols = ['location_key', 'longitude', 'latitude', 'city', 'neighbourhood', 'address', 'population',
+                     'crime_rate']
     crime_cols = ['crime_key', 'crime_category', 'crime_type', 'first_occurrence_time', 'last_occurrence_time',
                   'report_time', 'crime_severity']
     weather_cols = ['weather_key', 'temperature', 'main_weather', 'weather_description', 'humidity']
@@ -22,7 +23,7 @@ def creat_dimensions():
         columns=fact_cols)
 
 
-def insert_data(dimension, data, key):
+def insert_data(dimension: pd.DataFrame, data: dict, key: str):
     """
     insert data into a dimension
     :param dimension:(dataframe) one of the dimensions created from create_dimensions
@@ -30,14 +31,31 @@ def insert_data(dimension, data, key):
     :param key:(str) the returned key from the XX_data
     :return:(dataframe) the dimension dataframe with the data inserted
     """
+
+    def _exist(df: pd.DataFrame, data: dict):
+        """Examine if there is already a row with complete same data in df"""
+        if len(df.index) != 0:
+            df = df.drop(df.columns[0], axis=1)
+            to_insert = pd.DataFrame(data, index=[0])
+            for idx, row in df.iterrows():
+                insert_tmp = to_insert.iloc[0]
+                if insert_tmp.equals(row):
+                    return True, idx + 1
+            return False, -1
+        else:
+            return False, -1
+
     if data is not None:
         val = len(dimension.index) + 1
-        data[key] = val
-        dimension = dimension.append(data, ignore_index=True)
+        existed, dup_key = _exist(df=dimension, data=data)
+        if existed:
+            return dimension, dup_key
+        else:
+            data[key] = val
+            dimension = dimension.append(data, ignore_index=True)
         return dimension, val
     else:
         return dimension, len(dimension.index)
-
 
 
 def main():
@@ -56,29 +74,29 @@ def main():
         date_data, date_key = den.date_data(row['REPORTED_DATE'])
         date_dimension, date_r_key = insert_data(date_dimension, date_data, date_key)
         print('Done Date_r: ' + str(date_r_key))
-    
+
         print('inserting crime ...')
         crime_data, crime_key = den.crime_data(row['OFFENSE_CATEGORY_ID'], row['OFFENSE_TYPE_ID'], row['TIME_F'],
                                                row['TIME_L'], row['TIME_R'])
         crime_dimension, crime_key = insert_data(crime_dimension, crime_data, crime_key)
         print('Done Crime: ' + str(crime_key))
-    
+
         print('inserting location ...')
         location_data, location_key = den.location_data(row['GEO_LON'], row['GEO_LAT'], row['NEIGHBORHOOD_ID'],
                                                         row['INCIDENT_ADDRESS'], row['CRIME_RATE'])
         location_dimension, location_key = insert_data(location_dimension, location_data, location_key)
         print('Done Location: ' + str(location_key))
-    
+
         print('inserting weather ...')
         weather_data, weather_key = den.weather_data(row['DATE_F'], row['TIME_F'], weather_df)
         weather_dimension, weather_key = insert_data(weather_dimension, weather_data, weather_key)
         print('Done Weather: ' + str(weather_key))
-    
+
         print('inserting event ...')
         event_data, event_key = den.event_data(row['DATE_F'], event_df)
         event_dimension, event_key = insert_data(event_dimension, event_data, event_key)
         print('Done event: ' + str(event_key))
-    
+
         print('inserting fact ...')
         fact_data, fact_key = den.fact_data(crime_key, location_key, weather_key, date_f_key, date_l_key, date_r_key,
                                             event_key, row['IS_TRAFFIC'], row['TIME_F'], row['OFFENSE_CATEGORY_ID'],
