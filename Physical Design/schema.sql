@@ -282,8 +282,8 @@ CREATE TABLE IF NOT EXISTS CRIME_DATA_MART.Crime(
   crime_category CRIME_CATEGORY, 
   crime_type CRIME_TYPE, 
   first_occurence_time TIME WITHOUT TIME ZONE, 
-  last_occurence_time TIME WITHOUT TIME ZONE, 
-  report_time TIME WITHOUT TIME ZONE,
+  last_occurrence_time TIME WITHOUT TIME ZONE, 
+  reported_time TIME WITHOUT TIME ZONE,
   crime_severity CRIME_SEVERITY,
   PRIMARY KEY(crime_key)
 );
