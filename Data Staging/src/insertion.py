@@ -23,6 +23,10 @@ def creat_dimensions():
         columns=fact_cols)
 
 
+def write_csv(name: str, df: pd.DataFrame):
+    df.to_csv(name, index=False, header=True)
+
+
 def insert_data(dimension: pd.DataFrame, data: dict, key: str):
     """
     insert data into a dimension
@@ -45,14 +49,22 @@ def insert_data(dimension: pd.DataFrame, data: dict, key: str):
         else:
             return False, -1
 
+    # if data is not None:
+    #     val = len(dimension.index) + 1
+    #     existed, dup_key = _exist(df=dimension, data=data)
+    #     if existed:
+    #         return dimension, dup_key
+    #     else:
+    #         data[key] = val
+    #         dimension = dimension.append(data, ignore_index=True)
+    #     return dimension, val
+    # else:
+    #     return dimension, len(dimension.index)
+
     if data is not None:
         val = len(dimension.index) + 1
-        existed, dup_key = _exist(df=dimension, data=data)
-        if existed:
-            return dimension, dup_key
-        else:
-            data[key] = val
-            dimension = dimension.append(data, ignore_index=True)
+        data[key] = val
+        dimension = dimension.append(data, ignore_index=True)
         return dimension, val
     else:
         return dimension, len(dimension.index)
@@ -148,6 +160,14 @@ def main():
     print('\n\n\n\n\n')
     for index, row in fact_dimension.iterrows():
         print(row)
+
+    # dir = '../out/'
+    # write_csv(dir+'date_dimension.csv', date_dimension)
+    # write_csv(dir+'fact_table.csv', fact_dimension)
+    # write_csv(dir+'event_dimension.csv', event_dimension)
+    # write_csv(dir+'location_dimension.csv', location_dimension)
+    # write_csv(dir+'crime_data.csv',crime_dimension)
+    # write_csv(dir+'weather_data.csv', weather_dimension)
 
 
 if __name__ == '__main__':
