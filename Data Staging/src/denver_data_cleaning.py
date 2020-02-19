@@ -23,7 +23,7 @@ def read_files(path):
                    "REPORTED_DATE", "INCIDENT_ADDRESS", "GEO_LON", "GEO_LAT", "NEIGHBORHOOD_ID", "IS_CRIME",
                    "IS_TRAFFIC"]
         df = pd.read_csv(path, usecols=use_col, parse_dates=['FIRST_OCCURRENCE_DATE', 'LAST_OCCURRENCE_DATE',
-                                                             'REPORTED_DATE'], nrows=100)
+                                                             'REPORTED_DATE'], nrows=10)
 
         df['DATE_F'] = pd.DatetimeIndex(df['FIRST_OCCURRENCE_DATE']).date
         df['DATE_L'] = pd.DatetimeIndex(df['LAST_OCCURRENCE_DATE']).date
@@ -38,12 +38,10 @@ def read_files(path):
 
         #read weather data
         weather_df = pd.read_csv('../data/selected_weather_data.csv', parse_dates=['datetime'])
-        weather_df = weather_df[weather_df['city_name'] == 'Denver']
         weather_df['date'] = pd.DatetimeIndex(weather_df['datetime']).date
 
         #read event data
         event_df = pd.read_csv('../data/event_data.csv', parse_dates=['event_begin_time', 'event_end_time'])
-        event_df = event_df[event_df['city'] == 'Denver']
 
         return df, weather_df, event_df
     else:
@@ -105,7 +103,6 @@ def crime_data(c_category, c_type, time_f, time_l, time_r):
     severity = 'non-vio'
     if (c_category in is_violent) or (c_type in is_violent):
         severity = 'vio'
-
     return {'crime_category': c_category, 'crime_type': c_type, 'first_occurrence_time': time_f,
             'last_occurrence_time': time_l, 'report_time': time_r, 'crime_severity': severity}, 'crime_key'
 
@@ -115,9 +112,10 @@ def weather_data(date_f, time_f, weather_df):
     prepare the location data to be inserted into weather dimension
     :param date_f: (datetime.date) the first occurrence date for denver data
     :param time_f: (datetime.time) the first occurrence time for denver data
+    :param weather_df: (dataframe) the weather dataframe that is used to be matched
     :return: (dict, str) a dictionary containing all info that is inserting into weather dimension, weather_key dict key
     """
-
+    weather_df = weather_df[weather_df['city_name'] == 'Denver']
     crime_date_weather = weather_df[weather_df['date'] == date_f]
     crime_time_weather = crime_date_weather[pd.DatetimeIndex(crime_date_weather['datetime']).hour == time_f.hour]
     crime_time_weather = crime_time_weather.iloc[0]
@@ -125,25 +123,25 @@ def weather_data(date_f, time_f, weather_df):
     w_desc = crime_time_weather['weather_description']
     humidity = crime_time_weather['humidity']
     main_weather = crime_time_weather['weather_main']
-    return {'temperature': temp, 'weather_description': w_desc, 'humidity': humidity, 'city': 'Denver'}, 'weather_key'
+    return {'main_weather': main_weather, 'temperature': temp, 'weather_description': w_desc, 'humidity': humidity,
+            'city': 'Denver'}, 'weather_key'
 
 
 def event_data(date_f, event_df):
     """
     prepare the location data to be inserted into event dimension
-    :param date_f:
-    :param time_f:
+    :param date_f: (datetime.date) the first occurrence date
+    :param event_df: (dataframe) the event data used to be matched
     :return: (dict, str) a dictionary containing all info that is inserting into event dimension, event_key dict key
     """
+    event_df = event_df[event_df['city'] == 'Denver']
     event = event_df[event_df['event_end_time'] == pd.Timestamp(date_f)]
-
     if not event.empty:
         event = event.iloc[0]
         return {'event_name': event['event_name'], 'event_type': event['event_type'], 'event_location': event['event_location'],
                 'event_location_size': event['event_location_size']}, "event_key"
     else:
         return None, "event_key"
-
 
 
 def fact_data(crime_key, location_key, weather_key, date_f_key, date_l_key, date_r_key, event_key, is_traffic, time_f
