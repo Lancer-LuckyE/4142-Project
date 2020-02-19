@@ -11,9 +11,9 @@ def creat_dimensions():
     date_cols = ['date_key', 'crime_date', 'day_of_the_week', 'week_of_the_year', 'quarter', 'weekend', 'holiday',
                  'holiday_name']
     location_cols = ['location_key', 'longitude', 'latitude', 'city', 'neighbourhood', 'address', 'population', 'crime_rate']
-    crime_cols = ['crime_key', 'crime_category', 'crime_type', 'first_occurrence_time'  'last_occurrence_time',
+    crime_cols = ['crime_key', 'crime_category', 'crime_type', 'first_occurrence_time', 'last_occurrence_time',
                   'report_time', 'crime_severity']
-    weather_cols = ['weather_key', 'temperature', 'weather_description', 'humidity']
+    weather_cols = ['weather_key', 'temperature', 'main_weather', 'weather_description', 'humidity']
     event_cols = ['event_key', 'event_name', 'event_type', 'event_location', 'event_location_size']
     fact_cols = ['crime_key', 'location_key', 'weather_key', 'first_occurrence_date_key', 'last_occurrence_date_key',
                  'report_date_key', 'event_key', 'is_traffic', 'is_nighttime', 'is_fatal']
@@ -45,51 +45,83 @@ def main():
 
     print('read files ...')
     denver_df, weather_df, event_df = den.read_files('../data/denver_crime.csv')
-    # van_df = van.read_files('../data/van_crime.csv')
+    # for index, row in denver_df.iterrows():
+    #     print('\n\ninserting date ...')
+    #     date_data, date_key = den.date_data(row['FIRST_OCCURRENCE_DATE'])
+    #     date_dimension, date_f_key = insert_data(date_dimension, date_data, date_key)
+    #     print('Done Date_f: ' + str(date_f_key))
+    #     date_data, date_key = den.date_data(row['LAST_OCCURRENCE_DATE'])
+    #     date_dimension, date_l_key = insert_data(date_dimension, date_data, date_key)
+    #     print('Done Date_l: ' + str(date_l_key))
+    #     date_data, date_key = den.date_data(row['REPORTED_DATE'])
+    #     date_dimension, date_r_key = insert_data(date_dimension, date_data, date_key)
+    #     print('Done Date_r: ' + str(date_r_key))
+    #
+    #     print('inserting crime ...')
+    #     crime_data, crime_key = den.crime_data(row['OFFENSE_CATEGORY_ID'], row['OFFENSE_TYPE_ID'], row['TIME_F'],
+    #                                            row['TIME_L'], row['TIME_R'])
+    #     crime_dimension, crime_key = insert_data(crime_dimension, crime_data, crime_key)
+    #     print('Done Crime: ' + str(crime_key))
+    #
+    #     print('inserting location ...')
+    #     location_data, location_key = den.location_data(row['GEO_LON'], row['GEO_LAT'], row['NEIGHBORHOOD_ID'],
+    #                                                     row['INCIDENT_ADDRESS'], row['CRIME_RATE'])
+    #     location_dimension, location_key = insert_data(location_dimension, location_data, location_key)
+    #     print('Done Location: ' + str(location_key))
+    #
+    #     print('inserting weather ...')
+    #     weather_data, weather_key = den.weather_data(row['DATE_F'], row['TIME_F'], weather_df)
+    #     weather_dimension, weather_key = insert_data(weather_dimension, weather_data, weather_key)
+    #     print('Done Weather: ' + str(weather_key))
+    #
+    #     print('inserting event ...')
+    #     event_data, event_key = den.event_data(row['DATE_F'], event_df)
+    #     event_dimension, event_key = insert_data(event_dimension, event_data, event_key)
+    #     print('Done event: ' + str(event_key))
+    #
+    #     print('inserting fact ...')
+    #     fact_data, fact_key = den.fact_data(crime_key, location_key, weather_key, date_f_key, date_l_key, date_r_key,
+    #                                         event_key, row['IS_TRAFFIC'], row['TIME_F'], row['OFFENSE_CATEGORY_ID'],
+    #                                         row['OFFENSE_TYPE_ID'])
+    #     fact_dimension, fact_key = insert_data(fact_dimension, fact_data, fact_key)
+    #     print('Done Fact: ' + str(fact_key))
 
-    for index, row in denver_df.iterrows():
+    van_df = van.read_files('../data/van_crime.csv')
+    for index, row in van_df.iterrows():
         print('\n\ninserting date ...')
-        date_data, date_key = den.date_data(row['FIRST_OCCURRENCE_DATE'])
-        date_dimension, date_f_key = insert_data(date_dimension, date_data, date_key)
-        print('Done Date_f: ' + str(date_f_key))
-        date_data, date_key = den.date_data(row['LAST_OCCURRENCE_DATE'])
-        date_dimension, date_l_key = insert_data(date_dimension, date_data, date_key)
-        print('Done Date_l: ' + str(date_l_key))
-        date_data, date_key = den.date_data(row['REPORTED_DATE'])
+        date_data, date_key = van.date_data(row['DATETIME'])
         date_dimension, date_r_key = insert_data(date_dimension, date_data, date_key)
         print('Done Date_r: ' + str(date_r_key))
 
         print('inserting crime ...')
-        crime_data, crime_key = den.crime_data(row['OFFENSE_CATEGORY_ID'], row['OFFENSE_TYPE_ID'], row['TIME_F'],
-                                               row['TIME_L'], row['TIME_R'])
+        crime_data, crime_key = van.crime_data(row['TYPE'], row['TIME_R'])
         crime_dimension, crime_key = insert_data(crime_dimension, crime_data, crime_key)
         print('Done Crime: ' + str(crime_key))
 
         print('inserting location ...')
-        location_data, location_key = den.location_data(row['GEO_LON'], row['GEO_LAT'], row['NEIGHBORHOOD_ID'],
-                                                        row['INCIDENT_ADDRESS'], row['CRIME_RATE'])
+        location_data, location_key = van.location_data(row['X'], row['Y'], row['NEIGHBOURHOOD'], row['HUNDRED_BLOCK'],
+                                                        row['CRIME_RATE'])
         location_dimension, location_key = insert_data(location_dimension, location_data, location_key)
-        print('Done Location: ' + str(crime_key))
+        print('Done Location: ' + str(location_key))
 
         print('inserting weather ...')
-        weather_data, weather_key = den.weather_data(row['DATE_F'], row['TIME_F'], weather_df)
+        weather_data, weather_key = van.weather_data(row['DATE_R'], row['TIME_R'], weather_df)
         weather_dimension, weather_key = insert_data(weather_dimension, weather_data, weather_key)
         print('Done Weather: ' + str(weather_key))
 
         print('inserting event ...')
-        event_data, event_key = den.event_data(row['DATE_F'], event_df)
+        event_data, event_key = van.event_data(row['DATE_R'], event_df)
         event_dimension, event_key = insert_data(event_dimension, event_data, event_key)
         print('Done event: ' + str(event_key))
 
         print('inserting fact ...')
-        fact_data, fact_key = den.fact_data(crime_key, location_key, weather_key, date_f_key, date_l_key, date_r_key,
-                                            1, row['IS_TRAFFIC'], row['TIME_F'], row['OFFENSE_CATEGORY_ID'],
-                                            row['OFFENSE_TYPE_ID'])
+        fact_data, fact_key = van.fact_data(crime_key, location_key, weather_key, None, None, date_r_key,
+                                            event_key, row['TIME_R'], row['TYPE'])
         fact_dimension, fact_key = insert_data(fact_dimension, fact_data, fact_key)
-        print('Done Fact: ' + str(weather_key))
+        print('Done Fact: ' + str(fact_key))
 
     print('\n\n\n\n\n')
-    for index, row in weather_dimension.iterrows():
+    for index, row in fact_dimension.iterrows():
         print(row)
 
 

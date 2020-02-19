@@ -1,7 +1,5 @@
 import pandas as pd
-from datetime import datetime
 import holidays
-import math
 import json
 import pyproj
 
@@ -39,47 +37,20 @@ def read_files(path):
     :raise FileNotFoundError if there's no denver or van in file name.
     """
     if 'van' in path:
-        use_col = ["TYPE", "YEAR", "MONTH", "DAY", "HOUR", "MINUTE", "HUNDRED_BLOCK", "NEIGHBOURHOOD", "X",
-                   "Y"]
-        df = pd.read_csv(path, usecols=use_col, dtype={'HOUR': str, 'YEAR': str, 'MONTH': str, 'DAY': str,
-                                                       'MINUTE': str, 'X': float, 'Y': float}, nrows=10)
+        df = pd.read_csv(path, dtype={'HOUR': str, 'YEAR': int, 'MONTH': str, 'DAY': str, 'MINUTE': str}, nrows=100)
         # concatenate month, day, year, hour, minute and convert to datetime
-        df['DATE'] = df['MONTH'] + '/' + df['DAY'] + '/' + df['YEAR']
-        df['TIME'] = df['HOUR'] + ':' + df['MINUTE'] + ':00'
-        df['DATE'] = df['DATE'].apply(pd.to_datetime)
-
+        df = df.loc[df['YEAR'] >= 2015]
+        df['YEAR'] = df['YEAR'].apply(str)
+        df['DATETIME'] = df['MONTH'] + '/' + df['DAY'] + '/' + df['YEAR'] + " " + df['HOUR'] + ':' + df['MINUTE'] + ':00'
+        df['DATETIME'] = df['DATETIME'].apply(pd.to_datetime)
+        df['DATE_R'] = pd.DatetimeIndex(df['DATETIME']).date
+        df['TIME_R'] = pd.DatetimeIndex(df['DATETIME']).time
 
 
         # calculate crime rate
-        # 613576 is the average population from 2001 to 2017
-        crime_rate = (len(df) / len(df['YEAR'].unique())) * (10000 / 613576)
+        # 651416 is the average population from 2014 to 2017
+        crime_rate = (len(df) / len(df['YEAR'].unique())) * (10000 / 651416)
         df['CRIME_RATE'] = crime_rate
-
-
-        # Convert UTM coordinates to longitude and latitude
-        inproj = pyproj.Proj(proj='utm', zone=10, ellps='WGS84')
-        outproj = pyproj.Proj('epsg:4326')
-        longitude_lst, latitude_lst = [], []
-        x_lst, y_lst = df['X'].to_list(), df['Y'].to_list()
-        for x, y in zip(x_lst, y_lst):
-            lo, la = pyproj.transform(inproj, outproj, x, y)
-            longitude_lst.append(lo)
-            latitude_lst.append(la)
-        df['LONGITUDE'], df['LATITUDE'] = longitude_lst, latitude_lst
-        df = df.drop(columns=['X', 'Y'])
-
-        # Map original crime type to unified category and type
-        original_crime_type_lst = df['TYPE'].to_list()
-        unified_crime_category, unified_crime_type = [], []
-        for e in original_crime_type_lst:
-            c, t = VANCOUVER_CRIME_TYPE_MAPPING[e]
-            unified_crime_category.append(c)
-            unified_crime_type.append(t)
-        df['CRIME_CATEGORY'] = unified_crime_category
-        df['CRIME_TYPE'] = unified_crime_type
-        df = df.drop(columns=['TYPE'])
-
-
         return df
     else:
         raise FileNotFoundError
@@ -109,42 +80,117 @@ def date_data(crime_date):
             'quarter': quarter, 'weekend': weekend, 'holiday': holiday, 'holiday_name': holiday_name}, 'date_key'
 
 
-def location_data(longitude, latitude, neighbourhood, address, crime_rate):
+def location_data(x, y, neighbourhood, address, crime_rate):
     """
     prepare the location data to insert into location dimension
-    :param longitude: (float) X
-    :param latitude: (float) Y
+    :param x: (float)
+    :param y: (float)
     :param neighbourhood: (str) neighbourhood id from the dataframe
     :param address: (str) the address from the dataframe
     :param crime_rate: (float) the average crime rate of the city
     :return: (dict, str) a dictionary containing all info that is inserting into location dimension, location_key dict key
     """
+    inproj = pyproj.Proj(proj='utm', zone=10, ellps='WGS84')
+    outproj = pyproj.Proj('epsg:4326')
+    lon, lat = pyproj.transform(inproj, outproj, x, y)
     city = 'Vancouver'
-    return {'longitude': longitude, 'latitude': latitude, 'city': city, 'neighbourhood': neighbourhood,
-            'address': address, 'crime_rate': crime_rate}, 'location_key'
+    return {'longitude': lon, 'latitude': lat, 'city': city, 'neighbourhood': neighbourhood, 'address': address,
+            'crime_rate': crime_rate}, 'location_key'
 
 
-def crime_data(unified_crime_category, unified_crime_type, report_time, crime_severity) -> (dict, str):
-    return {'crime_category': unified_crime_category, 'crime_type': unified_crime_type, 'report_time': report_time,
-            'crime_severity': crime_severity}, 'crime_key'
+def crime_data(c_type, time_r):
+    """
+    prepare the location data to be inserted into crime dimension
+    :param c_type: (str) crime type
+    :param time_r: (datetime.time) case reported date
+    :return: (dict, str) a dictionary containing all info that is inserting into crime dimension, crime_key dict key
+    """
+    van_related = read_json('../data/van_related.json')
+    is_violent = van_related['violent-crime']
+    c_type_mapping = van_related['type-mapping']
+    c_category = c_type_mapping[c_type][0]
+    c_type = c_type_mapping[c_type][1]
 
 
-def weather_data(temperature, weather_description, humidity, precipitation):
-    return {'temperature': temperature, 'weather_description': weather_description, 'humidity': humidity,
-            'precipitation': precipitation}, 'weather_key'
+    severity = 'non-vio'
+    if (c_category in is_violent) or (c_type in is_violent):
+        severity = 'vio'
+    return {'crime_category': c_category, 'crime_type': c_type, 'report_time': time_r, 'crime_severity': severity}, 'crime_key'
 
 
-def event_data(event_name, event_type, event_location, event_location_size):
-    return {'event_name': event_name, 'event_type': event_type, 'event_location': event_location,
-            'event_location_size': event_location_size}, 'event_key'
+def weather_data(date_r, time_r, weather_df):
+    """
+    prepare the location data to be inserted into weather dimension
+    :param date_r: (datetime.date) the report occurrence date for denver data
+    :param time_r: (datetime.time) the report time for denver data
+    :param weather_df: (dataframe) the weather dataframe that is used to be matched
+    :return: (dict, str) a dictionary containing all info that is inserting into weather dimension, weather_key dict key
+    """
+    weather_df = weather_df[weather_df['city_name'] == 'Vancouver']
+    crime_date_weather = weather_df[weather_df['date'] == date_r]
+    crime_time_weather = crime_date_weather[pd.DatetimeIndex(crime_date_weather['datetime']).hour == time_r.hour]
+    crime_time_weather = crime_time_weather.iloc[0]
+    temp = crime_time_weather['temperature']
+    w_desc = crime_time_weather['weather_description']
+    humidity = crime_time_weather['humidity']
+    main_weather = crime_time_weather['weather_main']
+    return {'main_weather': main_weather, 'temperature': temp, 'weather_description': w_desc, 'humidity': humidity,
+            'city': 'Denver'}, 'weather_key'
 
 
-def fact_data(crime_key, location_key, weather_key, report_date_key, event_key, is_traffic, is_nighttime, is_fatal):
+def event_data(date_r, event_df):
+    """
+    prepare the location data to be inserted into event dimension
+    :param date_r: (datetime.date) the first occurrence date
+    :param event_df: (dataframe) the event data used to be matched
+    :return: (dict, str) a dictionary containing all info that is inserting into event dimension, event_key dict key
+    """
+    event_df = event_df[event_df['city'] == 'Vancouver']
+    event = event_df[event_df['event_end_time'] == pd.Timestamp(date_r)]
+    if not event.empty:
+        event = event.iloc[0]
+        return {'event_name': event['event_name'], 'event_type': event['event_type'], 'event_location': event['event_location'],
+                'event_location_size': event['event_location_size']}, "event_key"
+    else:
+        return None, "event_key"
+
+
+def fact_data(crime_key, location_key, weather_key, date_f_key, date_l_key, date_r_key, event_key, time_r,
+              c_type):
+    """
+    Assume night time flag is calculated basing on the first occurrence time.
+    prepare the location data to be inserted into fact dimension
+    :param crime_key: (int)
+    :param location_key: (int)
+    :param weather_key: (int)
+    :param date_f_key: (int)
+    :param date_l_key: (int)
+    :param date_r_key: (int)
+    :param event_key: (int)
+    :param is_traffic: (bool)
+    :param time_r: (datetime.time) reported time
+    :param c_type: (str) crime type
+    :return: (dict, str) a dictionary containing all info that is inserting into fact dimension, fact_key dict key
+    """
+    if (c_type == 'Vehicle Collision or Pedestrian Struck (with Fatality)') or (c_type == 'Vehicle Collision or Pedestrian Struck (with Injury)'):
+        is_traffic = True
+    else:
+        is_traffic = False
+
+    van_related = read_json('../data/van_related.json')
+    c_type_mapping = van_related['type-mapping']
+    c_category = c_type_mapping[c_type][0]
+    c_type = c_type_mapping[c_type][1]
+    is_fatal = van_related['fatal-crime']
+    if (c_category in is_fatal) or (c_type in is_fatal):
+        is_fatal = True
+    else:
+        is_fatal = False
+    if (time_r.hour >= 21) or (time_r.hour <= 5):
+        is_nighttime = True
+    else:
+        is_nighttime = False
     return {'crime_key': crime_key, 'location_key': location_key, 'weather_key': weather_key,
-            'report_date_key': report_date_key,
-            'event_key': event_key, 'is_traffic': is_traffic, 'is_nighttime': is_nighttime, 'is_fatal': is_fatal}, '?'
+            'first_occurrence_date_key': date_f_key, 'last_occurrence_date_key': date_l_key, 'report_date_key': date_r_key,
+            'event_key': event_key, 'is_traffic': is_traffic, 'is_nighttime': is_nighttime, 'is_fatal': is_fatal}, 'fact_key'
 
-
-if __name__ == '__main__':
-    read_files('../data/vancouver_raw.csv')
-    pass

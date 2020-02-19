@@ -22,5 +22,48 @@
     "South Cambie": 7682,
     "Marpole": 23832, 
     "Oakridge": 12443
-  }
+  },
+  "type-mapping": {
+    "Break and Enter Commercial": ["burglary",	"break-enter-commercial"],
+    "Break and Enter Residential/Other": ["burglary",	"break-enter-residential-other"], 
+    "Homicide": ["murder",	"murder"],
+    "Mischief": ["public-disorder", "mischief"],
+    "Offence Against a Person": ["other-crimes-against-persons", "offence-against-a-person"],
+    "Other Theft": ["larceny",	"theft-other"],
+    "Theft from Vehicle": ["theft-from-motor-vehicle",	"theft-from-vehicle"],
+    "Theft of Bicycle": ["larceny", "theft-bicycle"],
+    "Theft of Vehicle": ["auto-theft",	"theft-of-motor-vehicle"],
+    "Vehicle Collision or Pedestrian Struck (with Fatality)": ["traffic-accident", 	"traffic-accident-fatal"],
+    "Vehicle Collision or Pedestrian Struck (with Injury)": ["traffic-accident", 	"traffic-accident-injury"]
+  },
+  "violent-crime": [
+    "aggravated-assault",
+    "arson",
+    "burglary",
+    "murder",
+    "other-crimes-against-persons",
+    "robbery",
+    "sexual-assault",
+    "burglary-business-by-force",
+    "burg-auto-theft-resd-w-force",
+    "pawn-broker-viol",
+    "weapon-other-viol",
+    "robbery-purse-snatch-w-force",
+    "other-enviornment-animal-viol",
+    "burg-auto-theft-busn-w-force",
+    "liquor-other-viol"
+  ],
+  "fatal-crime": [
+    "murder",
+    "traffic-accident-fatal",
+    "Homicide",
+    "Vehicle Collision or Pedestrian Struck (with Fatality)",
+    "theft-embezzle",
+    "homicide-other",
+    "traf-vehicular-homicide",
+    "homicide-family",
+    "homicide-conspiracy",
+    "homicide-negligent",
+    "homicide-police-by-gun"
+  ]
 }
