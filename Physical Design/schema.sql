@@ -306,6 +306,8 @@ CREATE TABLE IF NOT EXISTS CRIME_DATA_MART.Event(
   event_key SERIAL NOT NULL, 
   event_name VARCHAR(30),
   event_type VARCHAR(30),
+  event_begin_date DATE,
+  event_end_date DATE,
   event_location VARCHAR(50),
   event_location_size INT,
   PRIMARY KEY(event_key)
