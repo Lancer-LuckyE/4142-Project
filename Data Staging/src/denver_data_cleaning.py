@@ -23,14 +23,19 @@ def read_files(path):
                    "REPORTED_DATE", "INCIDENT_ADDRESS", "GEO_LON", "GEO_LAT", "NEIGHBORHOOD_ID", "IS_CRIME",
                    "IS_TRAFFIC"]
         df = pd.read_csv(path, usecols=use_col, parse_dates=['FIRST_OCCURRENCE_DATE', 'LAST_OCCURRENCE_DATE',
-                                                             'REPORTED_DATE'], nrows=10)
-
+                                                             'REPORTED_DATE'])
+        df['LAST_OCCURRENCE_DATE'] = df['LAST_OCCURRENCE_DATE'].fillna(df['FIRST_OCCURRENCE_DATE'])
+        df['INCIDENT_ADDRESS'].fillna('UNKNOWN')
         df['DATE_F'] = pd.DatetimeIndex(df['FIRST_OCCURRENCE_DATE']).date
         df['DATE_L'] = pd.DatetimeIndex(df['LAST_OCCURRENCE_DATE']).date
         df['DATE_R'] = pd.DatetimeIndex(df['REPORTED_DATE']).date
         df['TIME_F'] = pd.DatetimeIndex(df['FIRST_OCCURRENCE_DATE']).time
         df['TIME_L'] = pd.DatetimeIndex(df['LAST_OCCURRENCE_DATE']).time
         df['TIME_R'] = pd.DatetimeIndex(df['REPORTED_DATE']).time
+
+        population = read_json('../data/denver_related.json')['population']
+        df['POPULATION'] = df['NEIGHBORHOOD_ID']
+        df = df.replace({'POPULATION': population})
 
         # 2723000 is the average population from 2015 to 2020
         crime_rate = (len(df) / 6) * (10000 / 2723000)
@@ -72,7 +77,7 @@ def date_data(crime_date):
             'quarter': quarter, 'weekend': weekend, 'holiday': holiday, 'holiday_name': holiday_name}, 'date_key'
 
 
-def location_data(lon, lat, neighbourhood, address, crime_rate):
+def location_data(lon, lat, neighbourhood, address, crime_rate, population):
     """
     prepare the location data to be inserted into location dimension
     :param lon: (float) longitude from the dataframe
@@ -82,9 +87,7 @@ def location_data(lon, lat, neighbourhood, address, crime_rate):
     :param crime_rate: (float) the average crime rate of the city
     :return: (dict, str) a dictionary containing all info that is inserting into location dimension, location_key dict key
     """
-    population = read_json('../data/denver_related.json')['population']
     city = 'Denver'
-    population = population[neighbourhood]
     return {'longitude': lon, 'latitude': lat, 'city': city, 'neighbourhood': neighbourhood, 'address': address,
             'population': population, 'crime_rate': crime_rate}, 'location_key'
 
@@ -103,6 +106,8 @@ def crime_data(c_category, c_type, time_f, time_l, time_r):
     severity = 'non-vio'
     if (c_category in is_violent) or (c_type in is_violent):
         severity = 'vio'
+    if time_l is None:
+        time_l = time_f
     return {'crime_category': c_category, 'crime_type': c_type, 'first_occurrence_time': time_f,
             'last_occurrence_time': time_l, 'report_time': time_r, 'crime_severity': severity}, 'crime_key'
 

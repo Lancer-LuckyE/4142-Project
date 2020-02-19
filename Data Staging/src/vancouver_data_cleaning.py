@@ -46,6 +46,15 @@ def read_files(path):
         df['DATE_R'] = pd.DatetimeIndex(df['DATETIME']).date
         df['TIME_R'] = pd.DatetimeIndex(df['DATETIME']).time
 
+        df['FIRST_OCCURRENCE_DATE'] = pd.NaT
+        df['LAST_OCCURRENCE_DATE'] = pd.NaT
+
+        population = read_json('../data/van_related.json')['population']
+        df['POPULATION'] = df['NEIGHBOURHOOD']
+        df = df.replace({'POPULATION': population})
+        df.loc[(df['HUNDRED_BLOCK'] == 'X NK_LOC ST'), 'HUNDRED_BLOCK'] = 'UNKNOWN'
+        df.loc[(df['HUNDRED_BLOCK'] == 'X NK_LOC ST'), 'NEIGHBOURHOOD'] = 'UNKNOWN'
+        df.loc[(df['HUNDRED_BLOCK'] == 'OFFSET TO PROTECT PRIVACY'), 'NEIGHBOURHOOD'] = 'OFFSET TO PROTECT PRIVACY'
 
         # calculate crime rate
         # 651416 is the average population from 2014 to 2017
@@ -80,7 +89,7 @@ def date_data(crime_date):
             'quarter': quarter, 'weekend': weekend, 'holiday': holiday, 'holiday_name': holiday_name}, 'date_key'
 
 
-def location_data(x, y, neighbourhood, address, crime_rate):
+def location_data(x, y, neighbourhood, address, crime_rate, population):
     """
     prepare the location data to insert into location dimension
     :param x: (float)
@@ -88,6 +97,7 @@ def location_data(x, y, neighbourhood, address, crime_rate):
     :param neighbourhood: (str) neighbourhood id from the dataframe
     :param address: (str) the address from the dataframe
     :param crime_rate: (float) the average crime rate of the city
+    :param population: (int) the average population of the neighbourhood in 2011
     :return: (dict, str) a dictionary containing all info that is inserting into location dimension, location_key dict key
     """
     inproj = pyproj.Proj(proj='utm', zone=10, ellps='WGS84')
@@ -95,7 +105,7 @@ def location_data(x, y, neighbourhood, address, crime_rate):
     lon, lat = pyproj.transform(inproj, outproj, x, y)
     city = 'Vancouver'
     return {'longitude': lon, 'latitude': lat, 'city': city, 'neighbourhood': neighbourhood, 'address': address,
-            'crime_rate': crime_rate}, 'location_key'
+            'crime_rate': crime_rate, 'population': population}, 'location_key'
 
 
 def crime_data(c_type, time_r):
@@ -167,7 +177,6 @@ def fact_data(crime_key, location_key, weather_key, date_f_key, date_l_key, date
     :param date_l_key: (int)
     :param date_r_key: (int)
     :param event_key: (int)
-    :param is_traffic: (bool)
     :param time_r: (datetime.time) reported time
     :param c_type: (str) crime type
     :return: (dict, str) a dictionary containing all info that is inserting into fact dimension, fact_key dict key

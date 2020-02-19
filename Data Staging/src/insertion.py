@@ -83,7 +83,8 @@ def main():
 
         print('inserting location ...')
         location_data, location_key = den.location_data(row['GEO_LON'], row['GEO_LAT'], row['NEIGHBORHOOD_ID'],
-                                                        row['INCIDENT_ADDRESS'], row['CRIME_RATE'])
+                                                        row['INCIDENT_ADDRESS'], row['CRIME_RATE'], row['POPULATION'])
+
         location_dimension, location_key = insert_data(location_dimension, location_data, location_key)
         print('Done Location: ' + str(location_key))
 
@@ -107,6 +108,12 @@ def main():
     van_df = van.read_files('../data/van_crime.csv')
     for index, row in van_df.iterrows():
         print('\n\ninserting date ...')
+        date_data, date_key = van.date_data(row['FIRST_OCCURRENCE_DATE'])
+        date_dimension, date_f_key = insert_data(date_dimension, date_data, date_key)
+        print('Done Date_f: ' + str(date_f_key))
+        date_data, date_key = van.date_data(row['LAST_OCCURRENCE_DATE'])
+        date_dimension, date_l_key = insert_data(date_dimension, date_data, date_key)
+        print('Done Date_l: ' + str(date_l_key))
         date_data, date_key = van.date_data(row['DATETIME'])
         date_dimension, date_r_key = insert_data(date_dimension, date_data, date_key)
         print('Done Date_r: ' + str(date_r_key))
@@ -118,7 +125,7 @@ def main():
 
         print('inserting location ...')
         location_data, location_key = van.location_data(row['X'], row['Y'], row['NEIGHBOURHOOD'], row['HUNDRED_BLOCK'],
-                                                        row['CRIME_RATE'])
+                                                        row['CRIME_RATE'], row['POPULATION'])
         location_dimension, location_key = insert_data(location_dimension, location_data, location_key)
         print('Done Location: ' + str(location_key))
 
@@ -133,7 +140,7 @@ def main():
         print('Done event: ' + str(event_key))
 
         print('inserting fact ...')
-        fact_data, fact_key = van.fact_data(crime_key, location_key, weather_key, None, None, date_r_key,
+        fact_data, fact_key = van.fact_data(crime_key, location_key, weather_key, date_f_key, date_l_key, date_r_key,
                                             event_key, row['TIME_R'], row['TYPE'])
         fact_dimension, fact_key = insert_data(fact_dimension, fact_data, fact_key)
         print('Done Fact: ' + str(fact_key))
