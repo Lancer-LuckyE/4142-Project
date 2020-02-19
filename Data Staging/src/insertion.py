@@ -10,7 +10,8 @@ def creat_dimensions():
     """
     date_cols = ['date_key', 'crime_date', 'day_of_the_week', 'week_of_the_year', 'quarter', 'weekend', 'holiday',
                  'holiday_name']
-    location_cols = ['location_key', 'longitude', 'latitude', 'city', 'neighbourhood', 'address', 'population', 'crime_rate']
+    location_cols = ['location_key', 'longitude', 'latitude', 'city', 'neighbourhood', 'address', 'population',
+                     'crime_rate']
     crime_cols = ['crime_key', 'crime_category', 'crime_type', 'first_occurrence_time', 'last_occurrence_time',
                   'report_time', 'crime_severity']
     weather_cols = ['weather_key', 'temperature', 'main_weather', 'weather_description', 'humidity']
@@ -22,7 +23,7 @@ def creat_dimensions():
         columns=fact_cols)
 
 
-def insert_data(dimension, data, key):
+def insert_data(dimension: pd.DataFrame, data: dict, key: str):
     """
     insert data into a dimension
     :param dimension:(dataframe) one of the dimensions created from create_dimensions
@@ -30,14 +31,31 @@ def insert_data(dimension, data, key):
     :param key:(str) the returned key from the XX_data
     :return:(dataframe) the dimension dataframe with the data inserted
     """
+
+    def _exist(df: pd.DataFrame, data: dict):
+        """Examine if there is already a row with complete same data in df"""
+        if len(df.index) != 0:
+            df = df.drop(df.columns[0], axis=1)
+            to_insert = pd.DataFrame(data, index=[0])
+            for idx, row in df.iterrows():
+                insert_tmp = to_insert.iloc[0]
+                if insert_tmp.equals(row):
+                    return True, idx + 1
+            return False, -1
+        else:
+            return False, -1
+
     if data is not None:
         val = len(dimension.index) + 1
-        data[key] = val
-        dimension = dimension.append(data, ignore_index=True)
+        existed, dup_key = _exist(df=dimension, data=data)
+        if existed:
+            return dimension, dup_key
+        else:
+            data[key] = val
+            dimension = dimension.append(data, ignore_index=True)
         return dimension, val
     else:
         return dimension, len(dimension.index)
-
 
 
 def main():
@@ -66,6 +84,7 @@ def main():
         print('inserting location ...')
         location_data, location_key = den.location_data(row['GEO_LON'], row['GEO_LAT'], row['NEIGHBORHOOD_ID'],
                                                         row['INCIDENT_ADDRESS'], row['CRIME_RATE'], row['POPULATION'])
+
         location_dimension, location_key = insert_data(location_dimension, location_data, location_key)
         print('Done Location: ' + str(location_key))
 

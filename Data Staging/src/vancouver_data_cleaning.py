@@ -3,7 +3,6 @@ import holidays
 import json
 import pyproj
 
-
 ca_holidays = holidays.CA()
 
 
@@ -11,6 +10,23 @@ def read_json(path):
     with open(path) as f:
         data = json.load(f)
     return data
+
+
+# key: vancouver crime type
+# value: [unified category, unified type]
+VANCOUVER_CRIME_TYPE_MAPPING = {
+    'Break and Enter Commercial': ['burglary', 'break-enter-commercial'],
+    'Break and Enter Residential/Other': ['burglary', 'break-enter-residential-other'],
+    'Homicide': ['murder', 'murder'],
+    'Mischief': ['public-disorder', 'mischief'],
+    'Offence Against a Person': ['other-crimes-against-persons', 'offence-against-a-person'],
+    'Other Theft': ['larceny', 'theft-other'],
+    'Theft from Vehicle': ['theft-from-motor-vehicle', 'theft-from-vehicle'],
+    'Theft of Bicycle': ['larceny', 'theft-bicycle'],
+    'Theft of Vehicle': ['auto-theft', 'theft-of-motor-vehicle'],
+    'Vehicle Collision or Pedestrian Struck (with Fatality)': ['traffic-accident', 'traffic-accident-fatal'],
+    'Vehicle Collision or Pedestrian Struck (with Injury)': ['traffic-accident', 'traffic-accident-inhury']
+}
 
 
 def read_files(path):
@@ -21,8 +37,7 @@ def read_files(path):
     :raise FileNotFoundError if there's no denver or van in file name.
     """
     if 'van' in path:
-        path_ = 'Data Staging/data/van_crime.csv'
-        df = pd.read_csv(path, dtype={'HOUR': str, 'YEAR': int, 'MONTH': str, 'DAY': str, 'MINUTE': str})
+        df = pd.read_csv(path, dtype={'HOUR': str, 'YEAR': int, 'MONTH': str, 'DAY': str, 'MINUTE': str}, nrows=100)
         # concatenate month, day, year, hour, minute and convert to datetime
         df = df.loc[df['YEAR'] >= 2015]
         df['YEAR'] = df['YEAR'].apply(str)
@@ -42,10 +57,9 @@ def read_files(path):
         df.loc[(df['HUNDRED_BLOCK'] == 'OFFSET TO PROTECT PRIVACY'), 'NEIGHBOURHOOD'] = 'OFFSET TO PROTECT PRIVACY'
 
         # calculate crime rate
-        # 651416 is the average population from 2004 to 2017
+        # 651416 is the average population from 2014 to 2017
         crime_rate = (len(df) / len(df['YEAR'].unique())) * (10000 / 651416)
         df['CRIME_RATE'] = crime_rate
-
         return df
     else:
         raise FileNotFoundError
@@ -89,7 +103,6 @@ def location_data(x, y, neighbourhood, address, crime_rate, population):
     inproj = pyproj.Proj(proj='utm', zone=10, ellps='WGS84')
     outproj = pyproj.Proj('epsg:4326')
     lon, lat = pyproj.transform(inproj, outproj, x, y)
-
     city = 'Vancouver'
     return {'longitude': lon, 'latitude': lat, 'city': city, 'neighbourhood': neighbourhood, 'address': address,
             'crime_rate': crime_rate, 'population': population}, 'location_key'
@@ -107,6 +120,7 @@ def crime_data(c_type, time_r):
     c_type_mapping = van_related['type-mapping']
     c_category = c_type_mapping[c_type][0]
     c_type = c_type_mapping[c_type][1]
+
 
     severity = 'non-vio'
     if (c_category in is_violent) or (c_type in is_violent):
@@ -181,12 +195,11 @@ def fact_data(crime_key, location_key, weather_key, date_f_key, date_l_key, date
         is_fatal = True
     else:
         is_fatal = False
-
     if (time_r.hour >= 21) or (time_r.hour <= 5):
         is_nighttime = True
     else:
         is_nighttime = False
-
     return {'crime_key': crime_key, 'location_key': location_key, 'weather_key': weather_key,
             'first_occurrence_date_key': date_f_key, 'last_occurrence_date_key': date_l_key, 'report_date_key': date_r_key,
             'event_key': event_key, 'is_traffic': is_traffic, 'is_nighttime': is_nighttime, 'is_fatal': is_fatal}, 'fact_key'
+
