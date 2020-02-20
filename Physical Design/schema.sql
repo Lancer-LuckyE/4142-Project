@@ -3,22 +3,12 @@ DROP SCHEMA IF EXISTS CRIME_DATA_MART CASCADE;
 CREATE SCHEMA CRIME_DATA_MART;
 
 
-
-CREATE DOMAIN CRIME_DATA_MART.DAY_OF_WEEK AS CHAR CHECK(
-  VALUE IN(
-    'Monday', 'Tuesday', 'Wednesday', 
-    'Thursday', 'Friday', 'Saturday', 
-    'Sunday'
-  )
-);
-
-
-
+-- 0 stands for Monday ... 6 standsfor Sunday
 CREATE TABLE IF NOT EXISTS CRIME_DATA_MART.Date(
   date_key SERIAL NOT NULL, 
   crime_date DATE,
-  day_of_the_week DAY_OF_WEEK, 
-  week_of_the_year INT, 
+  day_of_week INT,
+  week_of_year INT, 
   quarter INT, 
   weekend BOOLEAN, 
   holiday BOOLEAN, 
@@ -41,21 +31,21 @@ CREATE TABLE IF NOT EXISTS CRIME_DATA_MART.Location(
 
 
 
-CREATE DOMAIN CRIME_DATA_MART.CRIME_CATEGORY AS CHAR CHECK(
+CREATE DOMAIN CRIME_DATA_MART.CRIME_CATEGORY AS VARCHAR(50) CHECK(
   VALUE IN(
-    'aggravated_assault', 'all_other_crimes', 
-    'arson', 'auto_theft', 'burglary', 
-    'drug_alcohol', 'larceny', 'murder', 
-    'other_crimes_against_persons', 
-    'public_disorder', 'robbery', 'sexual_assault', 
-    'theft_from_motor_vehicle', 'traffic_accident', 
-    'white_collar_crime'
+    'aggravated-assault', 'all-other-crimes', 
+    'arson', 'auto-theft', 'burglary', 
+    'drug-alcohol', 'larceny', 'murder', 
+    'other-crimes-against-persons', 
+    'public-disorder', 'robbery', 'sexual-assault', 
+    'theft-from-motor-vehicle', 'traffic-accident', 
+    'white-collar-crime'
   )
 );
 
 
 
-CREATE DOMAIN CRIME_DATA_MART.CRIME_TYPE AS CHAR CHECK(
+CREATE DOMAIN CRIME_DATA_MART.CRIME_TYPE AS VARCHAR(50) CHECK(
   VALUE IN(
     'weapon-unlawful-discharge-of', 
     'theft-other', 
@@ -270,7 +260,7 @@ CREATE DOMAIN CRIME_DATA_MART.CRIME_TYPE AS CHAR CHECK(
 );
 
 
-CREATE DOMAIN CRIME_DATA_MART.CRIME_SEVERITY AS CHAR CHECK(
+CREATE DOMAIN CRIME_DATA_MART.CRIME_SEVERITY AS CHAR(11) CHECK(
   VALUE IN(
     'violent', 'non-violent'
   )
@@ -281,7 +271,7 @@ CREATE TABLE IF NOT EXISTS CRIME_DATA_MART.Crime(
   crime_key SERIAL NOT NULL, 
   crime_category CRIME_CATEGORY, 
   crime_type CRIME_TYPE, 
-  first_occurence_time TIME WITHOUT TIME ZONE, 
+  first_occurrence_time TIME WITHOUT TIME ZONE, 
   last_occurrence_time TIME WITHOUT TIME ZONE, 
   reported_time TIME WITHOUT TIME ZONE,
   crime_severity CRIME_SEVERITY,
@@ -304,11 +294,11 @@ CREATE TABLE IF NOT EXISTS CRIME_DATA_MART.Weather(
 
 CREATE TABLE IF NOT EXISTS CRIME_DATA_MART.Event(
   event_key SERIAL NOT NULL, 
-  event_name VARCHAR(30),
+  event_name VARCHAR(50),
   event_type VARCHAR(30),
   event_begin_date DATE,
   event_end_date DATE,
-  event_location VARCHAR(50),
+  event_location VARCHAR(100),
   event_location_size INT,
   PRIMARY KEY(event_key)
 );
@@ -320,25 +310,21 @@ CREATE TABLE IF NOT EXISTS CRIME_DATA_MART.CrimeFact(
   crime_key SERIAL NOT NULL, 
   location_key SERIAL NOT NULL, 
   weather_key SERIAL NOT NULL, 
-  report_date_key SERIAL NOT NULL, 
+  reported_date_key SERIAL NOT NULL, 
   event_key SERIAL NOT NULL, 
   is_traffic BOOLEAN, 
   is_nighttime BOOLEAN, 
   is_fatal BOOLEAN, 
   PRIMARY KEY(
     crime_key, location_key, 
-    weather_key, report_date_key,
+    weather_key, reported_date_key,
     event_key
   ), 
   FOREIGN KEY(crime_key) REFERENCES CRIME_DATA_MART.Crime(crime_key), 
   FOREIGN KEY(location_key) REFERENCES CRIME_DATA_MART.Location(location_key), 
   FOREIGN KEY(weather_key) REFERENCES CRIME_DATA_MART.Weather(weather_key), 
-  FOREIGN KEY(first_occurrence_date_key) REFERENCES CRIME_DATA_MART.Date(date_key), 
-  FOREIGN KEY(last_occurrence_date_key) REFERENCES CRIME_DATA_MART.Date(date_key), 
-  FOREIGN KEY(report_date_key) REFERENCES CRIME_DATA_MART.Date(date_key),
+  FOREIGN KEY(reported_date_key) REFERENCES CRIME_DATA_MART.Date(date_key),
   FOREIGN KEY(event_key) REFERENCES CRIME_DATA_MART.Event(event_key)
 );
-
-
 
 

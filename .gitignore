@@ -1,11 +1,11 @@
 # Default ignored files
 /.idea/workspace.xml
 .idea/
-.DS_Stroe
+.DS_Store
 4142-Project.iml
 Data Staging/data/*.csv
 Data_Staging.iml
 /data/*.csv
 /Data Staging/src/.ipynb_checkpoints
 out
-
+__pycache__
