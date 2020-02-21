@@ -1,0 +1,11 @@
+\copy crime_data_mart.weather(temperature,weather_main,weather_description,humidity,weather_key) FROM 'out/weather_dimension.csv' DELIMITER ',' CSV HEADER
+
+\copy crime_data_mart.crime(crime_category,crime_type,first_occurrence_time,last_occurrence_time,reported_time,crime_severity,crime_key) FROM 'out/crime_dimension.csv' DELIMITER ',' CSV HEADER
+
+\copy crime_data_mart.date(crime_date,day_of_week,week_of_year,quarter,weekend,holiday,holiday_name,date_key) FROM 'out/date_dimension.csv' DELIMITER ',' CSV HEADER
+
+\copy crime_data_mart.event(event_key,event_name,event_type,event_location,event_location_size,event_begin_date,event_end_date) FROM 'out/event_dimension.csv' DELIMITER ',' CSV HEADER
+
+\copy crime_data_mart.location(longitude,latitude,city,neighbourhood,address,crime_rate,location_key) FROM 'out/location_dimension.csv' DELIMITER ',' CSV HEADER
+
+\copy crime_data_mart.crimefact(crime_key,reported_date_key,location_key,weather_key,event_key,is_nighttime,is_fatal,is_traffic) FROM 'out/fact.csv' DELIMITER ',' CSV HEADER

@@ -250,12 +250,12 @@ CREATE DOMAIN CRIME_DATA_MART.CRIME_TYPE AS VARCHAR(50) CHECK(
     
     'break-enter-commercial', 
     'break-enter-residential-other', 
-    'homicide', 
     'murder', 
+    'mischief', 
     'offence-against-a-person', 
     'theft-from-vehicle', 
     'traffic-accident-fatal', 
-    'traffic-accident-inhury'
+    'traffic-accident-injury'
   )
 );
 
