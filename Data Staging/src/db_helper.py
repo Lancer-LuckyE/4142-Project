@@ -27,3 +27,7 @@ def db_connect():
         print(error)
     finally:
         return conn
+
+
+if __name__ == '__main__':
+    print(db_connect())
