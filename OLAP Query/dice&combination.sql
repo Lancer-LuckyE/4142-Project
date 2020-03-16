@@ -2,8 +2,8 @@
 -- Dice
 set search_path = CRIME_DATA_MART;
 
--- Vancouver, crime cateory: larceny and burglary, in December
-select is_nighttime, neighbourhood, address, holiday_name, crime_category, crime_type, reported_time, crime_severity from
+-- crime cateory: larceny and burglary, in December
+select city, crime_category, neighbourhood, count(*) as crime_count from
 crimefact as CF,
 location as L,
 date as D,
@@ -11,14 +11,14 @@ crime as C
 where CF.location_key = L.location_key and
 CF.reported_date_key = D.date_key and
 CF.crime_key = C.crime_key and
-L.city = 'Vancouver' and
 C.crime_category in ('larceny', 'burglary') and
 extract(month from D.crime_date) = 12 and
 L.longitude != 0
+group by crime_category, neighbourhood, city
 
 
 -- Denver, crime type: robbery-street and public-order-crimes-other, in Jan
-select is_nighttime, neighbourhood, address, holiday_name, crime_category, crime_type, reported_time, crime_severity from
+select crime_type, neighbourhood, count(*) from
 crimefact as CF,
 location as L,
 date as D,
@@ -30,19 +30,20 @@ L.city = 'Denver' and
 C.crime_type in ('robbery-street', 'public-order-crimes-other') and
 extract(month from D.crime_date) = 1 and
 L.longitude != 0
+group by neighbourhood, crime_type
+order by count desc
 
 -- Vancouver, crime type: traffic-accident-fatal and traffic-accident-injury, in Feb
-select is_nighttime, neighbourhood, address, holiday_name, crime_category, crime_type, reported_time, crime_severity from
+select holiday_name, crime_type, count(*)from
 crimefact as CF,
-location as L,
-date as D,
-crime as C
-where CF.location_key = L.location_key and
+crime as C,
+date as D
+where CF.crime_key = C.crime_key and
 CF.reported_date_key = D.date_key and
-CF.crime_key = C.crime_key and
-L.city = 'Vancouver' and
-C.crime_type in ('traffic-accident-fatal', 'traffic-accident-injury') and
+crime_type in ('traffic-accident-fatal', 'traffic-accident-injury') and
 extract(month from D.crime_date) = 2
+group by holiday_name, crime_type
+order by count desc
 
 
 -- Combination
